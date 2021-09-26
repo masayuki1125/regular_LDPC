@@ -130,8 +130,6 @@ if __name__=="__main__":
         count_all+=K
 
     print(count_err/count_all)
-    
-  
 
   time_end = time.time()  
   time_cost = time_end - time_start  
