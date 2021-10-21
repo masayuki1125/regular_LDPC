@@ -7,7 +7,7 @@
 import numpy as np
 import ray
 import pickle
-from regular_LDPC import LDPC
+from LDPC import LDPC
 from AWGN import _AWGN
 
 
@@ -33,14 +33,14 @@ def output(dumped,EbNodB):
         np.random.seed()
 
         #prepare some constants
-        MAX_ERR=1
+        MAX_BITALL=10**6
         count_bitall=0
         count_biterr=0
         count_all=0
         count_err=0
         
 
-        while count_err<MAX_ERR:
+        while count_bitall<MAX_BITALL:
         #print("\r"+str(count_err),end="")
             information,EST_information=cd.main_func(EbNodB)
             
@@ -172,7 +172,7 @@ class savetxt(LDPC,_AWGN,MC):
 if __name__=="__main__":
     mc=MC()
 
-    N_list=[500,1000,2000,4000]
+    N_list=[512,1024,2048,4096]
     result_ids_array=[]
     print(mc.EbNodB_range)
     for i,N in enumerate(N_list):
