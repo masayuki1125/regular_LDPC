@@ -10,15 +10,9 @@ import pickle
 from LDPC import LDPC
 from AWGN import _AWGN
 
-
 # In[4]:
-
-
 ray.init()
-
-
 # In[ ]:
-
 
 @ray.remote
 def output(dumped,EbNodB):

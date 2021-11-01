@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[239]:
+# In[1]:
 
 
 import os
@@ -12,7 +12,7 @@ from scipy import sparse
 ch=_AWGN()
 
 
-# In[240]:
+# In[2]:
 
 
 class coding():
@@ -41,19 +41,25 @@ class coding():
       self.filename="regular_LDPC_code_{}_{}".format(self.N,self.K)
     
     elif self.encoder_var==1:#NR_LDPC
-      self.Zc,filename,BG_num,Kb=self.generate_filename(self.K,self.R)
+      self.Zc,filename,self.BG_num,Kb=self.generate_filename(self.K,self.R)
       print(filename)
-      self.H=self.generate_NR_H(BG_num,Kb,self.Zc,filename)
+      self.H=self.generate_NR_H(Kb,self.Zc,filename)
 
       #redifine N and K
-      self.N=self.H.shape[1]-2*self.Zc
-      self.K=self.N-self.H.shape[0]
-      print((self.N,self.K))
-      print(self.Zc)
+
+      self.K=Kb*self.Zc
+      self.N=self.K+self.H.shape[0]
+      #print("N,K")
+      #print((self.N,self.K))
+      #print("matrix shape")
+      #print(self.H.shape)
       #modify H 
       #self.H=self.H[:self.K,:(self.H.shape[1]-self.H.shape[0]+self.K)]
+
+      
   
       self.filename="NR_LDPC_code_{}_{}".format(self.N,self.K)
+
     
     self.H=sparse.csr_matrix(self.H)
 
@@ -98,6 +104,7 @@ class coding():
     Zc_array=a*(2**j)
     MAX_Zc=384
     Zc_array=Zc_array[MAX_Zc>=Zc_array]
+    #print(Zc_array)
     Zc=np.min(Zc_array[Zc_array>=K/Kb])
 
     #decide iLS
@@ -129,19 +136,21 @@ class coding():
       tmp=np.roll(tmp,a,axis=1)
     return tmp
 
-  def generate_NR_H(self,BG_num,Kb,Zc,filename):
+  def generate_NR_H(self,Kb,Zc,filename):
 
     base_matrix=np.loadtxt(os.path.join('base_matrices', filename),dtype='int')
     
-    if BG_num==1:
+    if self.BG_num==1:
         tmp=22
-    elif BG_num==2:
+    elif self.BG_num==2:
         tmp=10
     
-    Mb=np.arange((self.N-self.K)//Zc+1)
-    Nb=np.zeros(Kb+2+len(Mb),dtype='int')
-    Nb[:Kb+2]=np.arange(Kb+2)
-    Nb[Kb+2:]=np.arange(tmp,tmp+len(Mb))
+    Mb=np.arange((self.N-self.K)//Zc)
+    Nb=np.arange(tmp+len(Mb))
+    #Nb[:Kb]=np.arange(Kb)
+    #Nb[Kb:]=np.arange(tmp,tmp+len(Mb))
+    #Nb=np.arange(tmp+len(Mb))
+    #print(Zc)
     #print(Nb)
     #print(Mb)
 
@@ -294,7 +303,7 @@ class coding():
     return tG
 
 
-# In[246]:
+# In[8]:
 
 
 class encoding(coding):
@@ -314,6 +323,7 @@ class encoding(coding):
       
     
     elif self.encoder_var==1:
+
       information=self.generate_information()
       codeword=self.NR_encode(information)
     
@@ -321,14 +331,19 @@ class encoding(coding):
 
   def NR_encode(self,information):
 
-    info_num=self.K+2*self.Zc
-    cwd_num=self.N+2*self.Zc
+    if self.BG_num==1:
+      tmp=22
+    elif self.BG_num==2:
+      tmp=10
+
+    info_num=tmp*self.Zc#+2*self.Zc
+    cwd_num=self.H.shape[1]#+2*self.Zc
 
     codeword=np.zeros(cwd_num,dtype=int)
 
-    #0:2*Zc:shortened code
-    codeword[2*self.Zc:info_num]=information
-
+    #remaining info_len is shortened
+    codeword[:len(information)]=information
+    
     #double diagonal structure
     matrix=np.zeros((self.Zc,cwd_num))
     for i in range(4):
@@ -366,7 +381,7 @@ class encoding(coding):
     return codeword
 
 
-# In[247]:
+# In[9]:
 
 
 class decoding(coding):
@@ -467,7 +482,7 @@ class decoding(coding):
     return EST_codeword
 
 
-# In[250]:
+# In[12]:
 
 
 class LDPC(encoding,decoding):
@@ -480,8 +495,15 @@ class LDPC(encoding,decoding):
     Lc=ch.generate_LLR(codeword,EbNodB)
 
     if self.encoder_var==1:
+      if self.BG_num==1:
+        tmp=22
+      elif self.BG_num==2:
+        tmp=10
       INF=10**10
-      Lc[:2*self.Zc]==-1*INF
+      #puncturing default: punctured
+      #Lc[:2*self.Zc]==0
+      #shortening
+      Lc[self.K:tmp*self.Zc]==-1*INF
 
     EST_codeword=self.decode(Lc)
 
@@ -489,17 +511,17 @@ class LDPC(encoding,decoding):
       return codeword,EST_codeword
     
     elif self.encoder_var==1:
-      return information, EST_codeword[2*self.Zc:self.K+2*self.Zc]
-
+      #return information, EST_codeword[2*self.Zc:self.K+2*self.Zc]
+      return information, EST_codeword[:self.K]
     
 
 
-# In[253]:
+# In[13]:
 
 
 if __name__=="__main__":
   #cd=coding(1024)
-  ldpc=LDPC(1024)
+  ldpc=LDPC(2048)
   main_func=ldpc.main_func
   EbNodB=0
 
