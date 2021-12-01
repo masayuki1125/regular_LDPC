@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[132]:
 
 
 import os
 from AWGN import _AWGN
 import numpy as np
 import scipy
-from scipy import sparse 
+from scipy import sparse
+import math 
 ch=_AWGN()
 
 
-# In[2]:
+# In[133]:
 
 
 class coding():
@@ -43,28 +44,29 @@ class coding():
     elif self.encoder_var==1:#NR_LDPC
       self.Zc,filename,self.BG_num,Kb=self.generate_filename(self.K,self.R)
       print(filename)
+      self.R=self.K/(self.N-2*self.Zc)
       self.H=self.generate_NR_H(Kb,self.Zc,filename)
 
       #redifine N and K
 
       self.K=Kb*self.Zc
       self.N=self.K+self.H.shape[0]
-      #print("N,K")
-      #print((self.N,self.K))
+      print("N,K")
+      print((self.N,self.K))
       #print("matrix shape")
       #print(self.H.shape)
+      print("R")
+      print(self.R)
       #modify H 
       #self.H=self.H[:self.K,:(self.H.shape[1]-self.H.shape[0]+self.K)]
-
-      
   
-      self.filename="NR_LDPC_code_{}_{}".format(self.N,self.K)
+      self.filename="NR_LDPC_code_{}_{}_{}".format(self.N,self.K,math.floor(self.R*10)/10)
 
     
     self.H=sparse.csr_matrix(self.H)
 
     #np.savetxt("tG",self.tG,fmt='%i')
-    #np.savetxt("H",self.H.toarray(),fmt='%i')
+    np.savetxt("H",self.H.toarray(),fmt='%i')
 
   @staticmethod
   def generate_filename(K,R):
@@ -147,9 +149,6 @@ class coding():
     
     Mb=np.arange((self.N-self.K)//Zc)
     Nb=np.arange(tmp+len(Mb))
-    #Nb[:Kb]=np.arange(Kb)
-    #Nb[Kb:]=np.arange(tmp,tmp+len(Mb))
-    #Nb=np.arange(tmp+len(Mb))
     #print(Zc)
     #print(Nb)
     #print(Mb)
@@ -163,6 +162,9 @@ class coding():
             matrix_row=np.concatenate([matrix_row,tmp],axis=1)
 
         H=np.concatenate([H,matrix_row],axis=0)
+        
+    if H[H.shape[0]-1,H.shape[1]-1]!=1:
+      print("H error")
         
     return H
 
@@ -303,7 +305,7 @@ class coding():
     return tG
 
 
-# In[8]:
+# In[139]:
 
 
 class encoding(coding):
@@ -321,7 +323,6 @@ class encoding(coding):
       information=self.generate_information()
       codeword=self.tG@information%2
       
-    
     elif self.encoder_var==1:
 
       information=self.generate_information()
@@ -381,7 +382,7 @@ class encoding(coding):
     return codeword
 
 
-# In[9]:
+# In[140]:
 
 
 class decoding(coding):
@@ -482,7 +483,7 @@ class decoding(coding):
     return EST_codeword
 
 
-# In[12]:
+# In[143]:
 
 
 class LDPC(encoding,decoding):
@@ -501,7 +502,7 @@ class LDPC(encoding,decoding):
         tmp=10
       INF=10**10
       #puncturing default: punctured
-      #Lc[:2*self.Zc]==0
+      Lc[:2*self.Zc]==0
       #shortening
       Lc[self.K:tmp*self.Zc]==-1*INF
 
@@ -516,7 +517,7 @@ class LDPC(encoding,decoding):
     
 
 
-# In[13]:
+# In[144]:
 
 
 if __name__=="__main__":

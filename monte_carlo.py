@@ -28,13 +28,14 @@ def output(dumped,EbNodB):
 
         #prepare some constants
         MAX_BITALL=10**6
+        MAX_BITERR=10**3
         count_bitall=0
         count_biterr=0
         count_all=0
         count_err=0
         
 
-        while count_bitall<MAX_BITALL:
+        while count_all<MAX_BITALL and count_err<MAX_BITERR:
         #print("\r"+str(count_err),end="")
             information,EST_information=cd.main_func(EbNodB)
             
@@ -60,7 +61,7 @@ class MC():
         self.MAX_ERR=8
         self.EbNodB_start=-5
         self.EbNodB_end=1
-        self.EbNodB_range=np.arange(self.EbNodB_start,self.EbNodB_end,0.5) #0.5dBごとに測定
+        self.EbNodB_range=np.arange(self.EbNodB_start,self.EbNodB_end,0.2) #0.2dBごとに測定
 
     #特定のNに関する出力
     def monte_carlo_get_ids(self,dumped):
