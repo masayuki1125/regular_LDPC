@@ -10,7 +10,7 @@ import numpy as np
 import scipy
 from scipy import sparse
 import math 
-ch=_AWGN()
+
 
 
 # In[133]:
@@ -21,8 +21,10 @@ class coding():
   def __init__(self,N):
     super().__init__() 
 
-    self.encoder_var=1 #0:regular_LDPC 1:NR_LDPC(quasi cyclic)
+    self.encoder_var=0 #0:regular_LDPC 1:NR_LDPC(quasi cyclic)
 
+    self.ch=_AWGN() #difine channel
+    
     self.N=N
     self.R=1/2
     self.K=int(self.N*self.R)
@@ -66,7 +68,7 @@ class coding():
     self.H=sparse.csr_matrix(self.H)
 
     #np.savetxt("tG",self.tG,fmt='%i')
-    np.savetxt("H",self.H.toarray(),fmt='%i')
+    #np.savetxt("H",self.H.toarray(),fmt='%i')
 
   @staticmethod
   def generate_filename(K,R):
@@ -493,7 +495,7 @@ class LDPC(encoding,decoding):
       
   def main_func(self,EbNodB):
     information,codeword=self.encode()
-    Lc=ch.generate_LLR(codeword,EbNodB)
+    Lc=self.ch.generate_LLR(codeword,EbNodB)
 
     if self.encoder_var==1:
       if self.BG_num==1:

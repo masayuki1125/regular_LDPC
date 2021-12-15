@@ -7,8 +7,10 @@
 import numpy as np
 import ray
 import pickle
-from LDPC import LDPC
+#from LDPC import LDPC
 from AWGN import _AWGN
+from PAM import PAM
+
 
 # In[4]:
 ray.init()
@@ -27,8 +29,8 @@ def output(dumped,EbNodB):
         np.random.seed()
 
         #prepare some constants
-        MAX_BITALL=10**6
-        MAX_BITERR=10**3
+        MAX_BITALL=10**4   #test
+        MAX_BITERR=10**2
         count_bitall=0
         count_biterr=0
         count_all=0
@@ -58,10 +60,10 @@ class MC():
     def __init__(self):
         self.TX_antenna=1
         self.RX_antenna=1
-        self.MAX_ERR=8
-        self.EbNodB_start=-5
-        self.EbNodB_end=1
-        self.EbNodB_range=np.arange(self.EbNodB_start,self.EbNodB_end,0.2) #0.2dBごとに測定
+        self.MAX_ERR=10
+        self.EbNodB_start=2
+        self.EbNodB_end=7
+        self.EbNodB_range=np.arange(self.EbNodB_start,self.EbNodB_end,0.5) #0.5dBごとに測定
 
     #特定のNに関する出力
     def monte_carlo_get_ids(self,dumped):
@@ -132,7 +134,7 @@ class MC():
 
                 print("\r"+"EbNodB="+str(EbNodB)+",BLER="+str(BLER[j])+",BER="+str(BER[j]),end="")
             
-            #特定のNについて終わったら出力
+            #特定のNについて終わったら出力            
             st=savetxt(N)
             st.savetxt(BLER,BER)
 
@@ -142,24 +144,28 @@ class MC():
 
 
 #毎回書き換える関数
-class savetxt(LDPC,_AWGN,MC):
+class savetxt():   
 
   def __init__(self,N):
-    super().__init__(N)   
+    self.cd=PAM(N)
+    self.ch=_AWGN()
+    self.mc=MC() 
 
   def savetxt(self,BLER,BER):
 
-    with open(self.filename,'w') as f:
+    with open(self.cd.filename,'w') as f:
 
         #print("#N="+str(self.N),file=f)
-        print("#TX_antenna="+str(self.TX_antenna),file=f)
-        print("#RX_antenna="+str(self.RX_antenna),file=f)
-        print("#modulation_symbol="+str(self.M),file=f)
-        print("#MAX_BLERR="+str(self.MAX_ERR),file=f)
-        print("#iteration number="+str(self.max_iter),file=f)
+        print("#Strong User SNR="+str(self.cd.EbNodB1),file=f)
+        print("#power allocation beta="+str(self.cd.beta),file=f)
+        print("#TX_antenna="+str(self.mc.TX_antenna),file=f)
+        print("#RX_antenna="+str(self.mc.RX_antenna),file=f)
+        print("#modulation_symbol="+str(self.ch.M),file=f)
+        print("#MAX_BLERR="+str(self.mc.MAX_ERR),file=f)
+        print("#iteration number="+str(self.cd.cd.max_iter),file=f)
         print("#EsNodB,BLER,BER",file=f) 
-        for i in range(len(self.EbNodB_range)):
-            print(str(self.EbNodB_range[i]),str(BLER[i]),str(BER[i]),file=f)
+        for i in range(len(self.mc.EbNodB_range)):
+            print(str(self.mc.EbNodB_range[i]),str(BLER[i]),str(BER[i]),file=f)
 
 
 # In[ ]:
@@ -167,11 +173,11 @@ class savetxt(LDPC,_AWGN,MC):
 if __name__=="__main__":
     mc=MC()
 
-    N_list=[512,1024,2048,4096]
+    N_list=[1024,2048,4096]
     result_ids_array=[]
     print(mc.EbNodB_range)
     for i,N in enumerate(N_list):
-        cd=LDPC(N)
+        cd=PAM(N)
         dumped=pickle.dumps(cd)
         print("N=",N)
         result_ids_array.append(mc.monte_carlo_get_ids(dumped))
