@@ -15,8 +15,8 @@ from AWGN import _AWGN
 class PAM():
   def __init__(self,N):
     #EbNodB1>EbNodB2
-    self.EbNodB1=50
-    self.EbNodB2=10
+    self.EbNodB1=20
+    #self.EbNodB2=10
     
     EbNo1 = 10 ** (self.EbNodB1 / 10)
     self.No1=1/EbNo1
@@ -30,7 +30,7 @@ class PAM():
     
     self.filename="PAM_LDPC_{}_{}".format(N,N//2)
     
-    self.intleav,self.deintleav=self.interleaver(N)
+    #self.intleav,self.deintleav=self.interleaver(N)
     
   @staticmethod
   def interleaver(N):
@@ -48,7 +48,7 @@ class PAM():
   
   def channel(self,cwd,beta):
     #interleave codeword
-    cwd=cwd[self.intleav]
+    #cwd=cwd[self.intleav]
     
     [cwd1,cwd2]=np.split(cwd,2)
     
@@ -91,7 +91,7 @@ class PAM():
     EST_cwd=self.cd.decode(Lc)
     
     #de-interleave codeword
-    EST_cwd=EST_cwd[self.deintleav]
+    #EST_cwd=EST_cwd[self.deintleav]
     
     EST_cwd1=EST_cwd[:len(EST_cwd)//2]
     return EST_cwd1
@@ -104,7 +104,7 @@ class PAM():
     EST_cwd=self.cd.decode(Lc)
     
     #de-interleave codeword
-    EST_cwd=EST_cwd[self.deintleav]
+    #EST_cwd=EST_cwd[self.deintleav]
     
     EST_cwd2=EST_cwd[len(EST_cwd)//2:]
     return EST_cwd2
@@ -117,7 +117,7 @@ class PAM():
   
   def main_func(self,EbNodB2):
     #calc No2
-    EbNo2 = 10 ** (self.EbNodB2 / 10)
+    EbNo2 = 10 ** (EbNodB2 / 10)
     No2=1/EbNo2
     
     info,cwd=self.PAM_encode()
@@ -133,6 +133,6 @@ class PAM():
 
 if __name__=="__main__":
   ma=PAM(1024)
-  a,b=ma.main_func(1)
+  a,b=ma.main_func(10)
   print(np.any(a!=b))
 
