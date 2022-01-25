@@ -7,28 +7,28 @@
 import numpy as np
 from LDPC import LDPC
 from AWGN import _AWGN
+#import sympy as sym
 
 
-# In[2]:
+# In[9]:
 
 
 class PAM():
-  def __init__(self,N):
+  def __init__(self,N,beta1=0.2):
+    self.N=N
+    self.K=self.N//2
     #EbNodB1>EbNodB2
-    self.EbNodB1=20
-    #self.EbNodB2=10
+    #User1=Strong User(Fixed)
+    #User2=Weak User
+    self.EbNodB_diff=10
     
-    EbNo1 = 10 ** (self.EbNodB1 / 10)
-    self.No1=1/EbNo1
-    #EbNo2 = 10 ** (self.EbNodB2 / 10)
-    #self.No2=1/EbNo2
-    
-    self.beta=0.1
+    self.beta=(beta1**(1/2))/((1-beta1)**(1/2))
+    print(self.beta)
     
     self.ch=_AWGN()
     self.cd=LDPC(N)
     
-    self.filename="PAM_LDPC_{}_{}".format(N,N//2)
+    self.filename="PAM_LDPC_{}_{}_{}".format(self.beta,self.N,self.K)
     
     #self.intleav,self.deintleav=self.interleaver(N)
     
@@ -116,23 +116,26 @@ class PAM():
     return EST_cwd1,EST_cwd2
   
   def main_func(self,EbNodB2):
-    #calc No2
+    EbNodB1=EbNodB2+self.EbNodB_diff
+    EbNo1 = 10 ** (EbNodB1 / 10)
+    No1=1/EbNo1
+    
     EbNo2 = 10 ** (EbNodB2 / 10)
     No2=1/EbNo2
     
     info,cwd=self.PAM_encode()
     res_const=self.channel(cwd,self.beta)
-    EST_cwd1,EST_cwd2=self.PAM_decode(res_const,self.No1,No2)
+    EST_cwd1,EST_cwd2=self.PAM_decode(res_const,No1,No2)
     EST_cwd=np.concatenate([EST_cwd1,EST_cwd2])
     
     return cwd,EST_cwd
 
 
-# In[5]:
+# In[19]:
 
 
 if __name__=="__main__":
   ma=PAM(1024)
-  a,b=ma.main_func(10)
+  a,b=ma.main_func(4)
   print(np.any(a!=b))
 

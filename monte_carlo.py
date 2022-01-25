@@ -61,8 +61,8 @@ class MC():
         self.TX_antenna=1
         self.RX_antenna=1
         self.MAX_ERR=10
-        self.EbNodB_start=2
-        self.EbNodB_end=7
+        self.EbNodB_start=-1
+        self.EbNodB_end=4
         self.EbNodB_range=np.arange(self.EbNodB_start,self.EbNodB_end,0.5) #0.5dBごとに測定
 
     #特定のNに関する出力
@@ -156,7 +156,7 @@ class savetxt():
     with open(self.cd.filename,'w') as f:
 
         #print("#N="+str(self.N),file=f)
-        print("#Strong User SNR="+str(self.cd.EbNodB1),file=f)
+        print("#Strong User SNR="+str(self.cd.EbNodB_diff),file=f)
         print("#power allocation beta="+str(self.cd.beta),file=f)
         print("#TX_antenna="+str(self.mc.TX_antenna),file=f)
         print("#RX_antenna="+str(self.mc.RX_antenna),file=f)

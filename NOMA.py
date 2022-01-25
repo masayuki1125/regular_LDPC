@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[1]:
 
 
 import numpy as np
@@ -19,36 +19,41 @@ from AWGN import _AWGN
 #④β=β1/β2とし、Weak Userの受信SNRを変化させて、全体のsystemのBERを測定する
 
 
-# In[5]:
+# In[2]:
 
 
 class NOMA():
-  def __init__(self,N):
+  def __init__(self,N,beta1=0.2):
+    self.N=N
+    self.K=self.N//2
+    
+    self.N1=self.N//2
+    self.K1=self.K//2
+    self.N2=self.N//2
+    self.K2=self.K//2
     #EbNodB1>EbNodB2
     #User1=Strong User(Fixed)
     #User2=Weak User
-    self.EbNodB1=10
+    self.EbNodB_diff=10
     
-    #Strong Userの受信SNから、βを決定する
-    self.beta=0.1
+    self.beta=(beta1**(1/2))/((1-beta1)**(1/2))
+    print(self.beta)
+    
+    self.filename="NOMA_LDPC_{}_{}_{}".format(self.beta,self.N,self.K)
     
     #self.EbNodB2 change
     
-    EbNo1 = 10 ** (self.EbNodB1 / 10)
-    self.No1=1/EbNo1
+    #EbNo1 = 10 ** (self.EbNodB1 / 10)
+    #self.No1=1/EbNo1
     
     self.ch=_AWGN()
-    self.cd1=LDPC(N//2)
-    self.cd2=LDPC(N//2)
-    
-    self.filename="NOMA_LDPC_{}_{}".format(N,N//2)
+    self.cd1=LDPC(self.N1)
+    self.cd2=LDPC(self.N2)
     
   def NOMA_encode(self):
     info1,cwd1=self.cd1.encode()
     info2,cwd2=self.cd2.encode()
     return info1,info2,cwd1,cwd2
-  
-  
 
 
 # In[6]:
@@ -65,7 +70,7 @@ class NOMA(NOMA):
 '''
 
 
-# In[7]:
+# In[3]:
 
 
 class NOMA(NOMA):
@@ -84,13 +89,13 @@ class NOMA(NOMA):
     output estimated information
     '''
     
-    EST_cwd2=self.decode2(res_const,self.No1+self.beta)
+    EST_cwd2=self.decode2(res_const,No1+self.beta)
 
     EST_const2=self.ch.generate_QAM(EST_cwd2)
 
     RX_const=res_const-EST_const2
 
-    Lc=self.ch.demodulate(RX_const,self.No1/self.beta)
+    Lc=self.ch.demodulate(RX_const,No1/self.beta)
     EST_cwd1=self.cd1.decode(Lc)
     
     return EST_cwd1
@@ -109,13 +114,17 @@ class NOMA(NOMA):
     return EST_cwd1,EST_cwd2
   
   def main_func(self,EbNodB2):
-    #make No2
+    #make No1 and No2
+    EbNodB1=EbNodB2+self.EbNodB_diff
+    EbNo1 = 10 ** (EbNodB1 / 10)
+    No1=1/EbNo1
+    
     EbNo2 = 10 ** (EbNodB2 / 10)
     No2=1/EbNo2
     
     info1,info2,cwd1,cwd2=self.NOMA_encode()
     res_const=self.channel(cwd1,cwd2,self.beta)
-    EST_cwd1,EST_cwd2=self.NOMA_decode(res_const,self.No1,No2)
+    EST_cwd1,EST_cwd2=self.NOMA_decode(res_const,No1,No2)
     
     #info=np.concatenate([info1,info2])
     cwd=np.concatenate([cwd1,cwd2])
@@ -125,11 +134,11 @@ class NOMA(NOMA):
     
 
 
-# In[11]:
+# In[5]:
 
 
 if __name__=="__main__":
-  ma=NOMA()
-  a,b=ma.main_func(1)
+  ma=NOMA(1024,0.01)
+  a,b=ma.main_func(0)
   print(np.sum(a!=b))
 
