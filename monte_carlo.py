@@ -9,7 +9,7 @@ import ray
 import pickle
 #from LDPC import LDPC
 from AWGN import _AWGN
-from PAM import PAM
+from NOMA import NOMA
 
 
 # In[4]:
@@ -147,7 +147,7 @@ class MC():
 class savetxt():   
 
   def __init__(self,N):
-    self.cd=PAM(N)
+    self.cd=NOMA(N)
     self.ch=_AWGN()
     self.mc=MC() 
 
@@ -162,7 +162,7 @@ class savetxt():
         print("#RX_antenna="+str(self.mc.RX_antenna),file=f)
         print("#modulation_symbol="+str(self.ch.M),file=f)
         print("#MAX_BLERR="+str(self.mc.MAX_ERR),file=f)
-        print("#iteration number="+str(self.cd.cd.max_iter),file=f)
+        print("#iteration number="+str(self.cd.cd1.max_iter),file=f)
         print("#EsNodB,BLER,BER",file=f) 
         for i in range(len(self.mc.EbNodB_range)):
             print(str(self.mc.EbNodB_range[i]),str(BLER[i]),str(BER[i]),file=f)
@@ -177,7 +177,7 @@ if __name__=="__main__":
     result_ids_array=[]
     print(mc.EbNodB_range)
     for i,N in enumerate(N_list):
-        cd=PAM(N)
+        cd=NOMA(N)
         dumped=pickle.dumps(cd)
         print("N=",N)
         result_ids_array.append(mc.monte_carlo_get_ids(dumped))
